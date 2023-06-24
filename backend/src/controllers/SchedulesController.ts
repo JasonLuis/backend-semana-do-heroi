@@ -1,6 +1,6 @@
-import { NextFunction, Request, Response } from "express";
-import { SchedulesService } from "../services/SchedulesService";
-import { parseISO } from "date-fns";
+import { NextFunction, Request, Response } from 'express';
+import { SchedulesService } from '../services/SchedulesService';
+import { parseISO } from 'date-fns';
 
 class SchedulesController {
   private schedulesService: SchedulesService;
@@ -34,19 +34,28 @@ class SchedulesController {
       next(error);
     }
   }
-
   async update(request: Request, response: Response, next: NextFunction) {
     const { id } = request.params;
     const { date } = request.body;
     const { user_id } = request;
     try {
       const result = await this.schedulesService.update(id, date, user_id);
+
       return response.json(result);
     } catch (error) {
       next(error);
     }
   }
-  delete(request: Request, response: Response, next: NextFunction) {}
+  async delete(request: Request, response: Response, next: NextFunction) {
+    const { id } = request.params;
+    try {
+      const result = await this.schedulesService.delete(id);
+
+      return response.json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export { SchedulesController };

@@ -64,18 +64,18 @@ class UsersServices {
     }
 
     return {
-      message: 'User update successfully',
+      message: "User update successfully",
     };
   }
 
   async auth(email: string, password: string) {
     const findUser = await this.usersRepository.findUserByEmail(email);
-    
+
     if (!findUser) {
       throw new Error("User or password invalid");
     }
     const passwordMatch = await compare(password, findUser.password);
-    
+
     if (!passwordMatch) {
       throw new Error("User or password invalid");
     }
@@ -84,13 +84,20 @@ class UsersServices {
     if (!secretKey) {
       throw new Error("There is no token key");
     }
+
+    let secretKeRefreshToken: string | undefined =
+      process.env.ACCESS_KEY_TOKEN_REFRESH;
+    if (!secretKeRefreshToken) {
+      throw new Error("There is no token key");
+    }
+
     const token = sign({ email }, secretKey, {
       subject: findUser.id,
       expiresIn: 60 * 15,
     });
-    const refreshToken = sign({ email }, secretKey, {
+    const refreshToken = sign({ email }, secretKeRefreshToken, {
       subject: findUser.id,
-      expiresIn: '7d',
+      expiresIn: "7d",
     });
 
     return {
@@ -104,22 +111,30 @@ class UsersServices {
   }
 
   async refresh(refresh_token: string) {
-    if(!refresh_token){
-      throw new Error('Refresh token missing');
+    if (!refresh_token) {
+      throw new Error("Refresh token missing");
     }
+    let secretKeyRefresh: string | undefined =
+      process.env.ACCESS_KEY_TOKEN_REFRESH;
+    if (!secretKeyRefresh) {
+      throw new Error("There is no refresh token key");
+    }
+
     let secretKey: string | undefined = process.env.ACCESS_KEY_TOKEN;
     if (!secretKey) {
       throw new Error("There is no refresh token key");
     }
-    const verifyRefreshToken = verify(refresh_token, secretKey);
+    const verifyRefreshToken = await verify(refresh_token, secretKeyRefresh);
 
     const { sub } = verifyRefreshToken;
 
-    const newToken = sign({sub}, secretKey, {
-      expiresIn: 60 *15,
+    const newToken = sign({ sub }, secretKey, {
+      expiresIn: 60 * 15,
     });
-
-    return { token: newToken };
+    const refreshToken = sign({ sub }, secretKeyRefresh, {
+      expiresIn: "7d",
+    });
+    return { token: newToken, refresh_token: refreshToken };
   }
 }
 

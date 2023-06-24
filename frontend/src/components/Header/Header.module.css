@@ -25,6 +25,11 @@
     margin-left: .2rem;
 }
 
+.dropdown a {
+    color: var(--white);
+    text-decoration: none;
+}
+
 .dropdown {
     position: relative;
     display: flex;
